@@ -1,0 +1,85 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Analysis / temp outputs
+analysis*.txt
+test_results*.txt
+final*.txt
+build_fail_log.txt
+clean*.txt
+flutter_*.log
+result.txt
+test_output*.txt
+core_analysis.txt
+features_analysis.txt
+full_analysis.txt
+flutter_analysis*.txt
+analysis_output*.txt
+analysis_report*.txt
+analysis_v*.log
+analysis_*.txt
+check_db.dart
+test_stats_raw.dart
+test_supabase_stats.dart
+ordermate-lib.zip
+ordermate.zip
+ordermate.sql
+insert_queries.sql
+add_location_to_orders.sql
+add_login_location_to_orders.sql
+location_tracking_migration.sql
+ORDERMATE_READONLY_AUDIT_VERIFICATION.sql
+ACCOUNTING_TECH_NOTES.md
+TECHNICAL_GUIDE.md
+TECHNICAL_GUIDE_upgrade.md
+TECHNICAL_DOCS.md
+FULL_TECHNICAL_GUIDE.md
+USER_MANUAL.md
+audit_results/
+tools/
+test_email*.json
+test_email*.txt
+integration_test/

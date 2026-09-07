@@ -1,0 +1,72 @@
+[
+    {
+        "id": "sys-cash-in-hand",
+        "account_code": "1001",
+        "account_title": "Cash in Hand",
+        "level": 1,
+        "account_type_id": 1,
+        "account_category_id": 1,
+        "is_active": true,
+        "is_system": true
+    },
+    {
+        "id": "sys-ar",
+        "account_code": "1002",
+        "account_title": "Accounts Receivable",
+        "level": 1,
+        "account_type_id": 1,
+        "account_category_id": 2,
+        "is_active": true,
+        "is_system": true
+    },
+    {
+        "id": "sys-inventory",
+        "account_code": "1003",
+        "account_title": "Inventory Account",
+        "level": 1,
+        "account_type_id": 1,
+        "account_category_id": 3,
+        "is_active": true,
+        "is_system": true
+    },
+    {
+        "id": "sys-ap",
+        "account_code": "2001",
+        "account_title": "Accounts Payable",
+        "level": 1,
+        "account_type_id": 2,
+        "account_category_id": 5,
+        "is_active": true,
+        "is_system": true
+    },
+    {
+        "id": "sys-retained-earnings",
+        "account_code": "3001",
+        "account_title": "Retained Earnings",
+        "level": 1,
+        "account_type_id": 3,
+        "account_category_id": 7,
+        "is_active": true,
+        "is_system": true
+    },
+    {
+        "id": "sys-sales",
+        "account_code": "4001",
+        "account_title": "Sales Revenue",
+        "level": 1,
+        "account_type_id": 4,
+        "account_category_id": 8,
+        "is_active": true,
+        "is_system": true
+    },
+    {
+        "id": "sys-cogs",
+        "account_code": "5001",
+        "account_title": "Cost of Goods Sold",
+        "level": 1,
+        "account_type_id": 5,
+        "account_category_id": 9,
+        "is_active": true,
+        "is_system": true
+    }
+]

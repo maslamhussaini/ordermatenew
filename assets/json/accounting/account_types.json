@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "type_name": "Asset",
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 2,
+        "type_name": "Liability",
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 3,
+        "type_name": "Equity",
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 4,
+        "type_name": "Revenue",
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 5,
+        "type_name": "Expense",
+        "status": true,
+        "is_system": true
+    }
+]

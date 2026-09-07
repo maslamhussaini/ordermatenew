@@ -1,0 +1,16 @@
+[0] (500,500)<flt-semantics id='flt-semantic-node-18' role='button'>Dismiss />
+Triangletech
+Order Mate
+User: Muhammad Aslam
+[1] (238,493)<flt-semantics id='flt-semantic-node-33' role='group' scrollable='true'>Settings />
+	[2] (238,198)<flt-semantics id='flt-semantic-node-24' role='button'>Dashboard />
+	[3] (238,292)<flt-semantics id='flt-semantic-node-37' role='button'>Admin />
+	[4] (238,365)<flt-semantics id='flt-semantic-node-38' role='button'>Organizations List />
+	[5] (238,438)<flt-semantics id='flt-semantic-node-39' role='button'>Branches List />
+	[6] (238,517)<flt-semantics id='flt-semantic-node-27' role='button'>Customers Management />
+	[7] (238,601)<flt-semantics id='flt-semantic-node-28' role='button'>Employee Management />
+	[8] (238,685)<flt-semantics id='flt-semantic-node-29' role='button'>Inventory Management />
+	[9] (238,768)<flt-semantics id='flt-semantic-node-30' role='button'>Suppliers Management />
+	Settings
+Version 1.0.4 • Build 2026-01-06 01:45:19
+[10] (145,963)<flt-semantics id='flt-semantic-node-36' role='button'>What's New? />

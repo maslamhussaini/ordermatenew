@@ -1,0 +1,72 @@
+[
+    {
+        "id": 1,
+        "category_name": "Bank & Cash",
+        "account_type_id": 1,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 2,
+        "category_name": "Accounts Receivable",
+        "account_type_id": 1,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 3,
+        "category_name": "Inventory",
+        "account_type_id": 1,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 4,
+        "category_name": "Fixed Assets",
+        "account_type_id": 1,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 5,
+        "category_name": "Accounts Payable",
+        "account_type_id": 2,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 6,
+        "category_name": "Accrued Liabilities",
+        "account_type_id": 2,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 7,
+        "category_name": "Retained Earnings",
+        "account_type_id": 3,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 8,
+        "category_name": "Sales Revenue",
+        "account_type_id": 4,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 9,
+        "category_name": "Cost of Goods Sold",
+        "account_type_id": 5,
+        "status": true,
+        "is_system": true
+    },
+    {
+        "id": 10,
+        "category_name": "Operating Expenses",
+        "account_type_id": 5,
+        "status": true,
+        "is_system": true
+    }
+]

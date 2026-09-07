@@ -1,0 +1,9 @@
+﻿{
+    "message":  "Success",
+    "user_id":  "eb7742f0-e4a5-4d65-8bf5-ca39abceee87",
+    "debug_logs":  [
+                       "Processing Auth for: test_invite4@getordermate.com",
+                       "New user created: eb7742f0-e4a5-4d65-8bf5-ca39abceee87",
+                       "Sending email..."
+                   ]
+}

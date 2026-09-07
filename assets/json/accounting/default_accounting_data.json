@@ -1,0 +1,248 @@
+{
+    "account_types": [
+        {
+            "type_name": "Assets",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "type_name": "Liabilities",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "type_name": "Equity",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "type_name": "Revenue",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "type_name": "Expenses",
+            "status": true,
+            "is_system": true
+        }
+    ],
+    "account_categories": [
+        {
+            "category_name": "Current Assets",
+            "type_name": "Assets",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Fixed Assets",
+            "type_name": "Assets",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Current Liabilities",
+            "type_name": "Liabilities",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Long Term Liabilities",
+            "type_name": "Liabilities",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Owners Equity",
+            "type_name": "Equity",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Operating Revenue",
+            "type_name": "Revenue",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Operating Expenses",
+            "type_name": "Expenses",
+            "status": true,
+            "is_system": true
+        },
+        {
+            "category_name": "Cost of Goods Sold",
+            "type_name": "Expenses",
+            "status": true,
+            "is_system": true
+        }
+    ],
+    "chart_of_accounts": [
+        {
+            "account_code": "1001",
+            "account_title": "Cash on Hand",
+            "category_name": "Current Assets",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "1002",
+            "account_title": "Petty Cash",
+            "category_name": "Current Assets",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "1100",
+            "account_title": "Accounts Receivable",
+            "category_name": "Current Assets",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "1200",
+            "account_title": "Inventory Asset",
+            "category_name": "Current Assets",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "1500",
+            "account_title": "Furniture and Fixtures",
+            "category_name": "Fixed Assets",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "2000",
+            "account_title": "Accounts Payable",
+            "category_name": "Current Liabilities",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "2100",
+            "account_title": "Sales Tax Payable",
+            "category_name": "Current Liabilities",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "2200",
+            "account_title": "Purchase Tax Payable",
+            "category_name": "Current Liabilities",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "3000",
+            "account_title": "Owner's Capital",
+            "category_name": "Owners Equity",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "3100",
+            "account_title": "Retained Earnings",
+            "category_name": "Owners Equity",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "4000",
+            "account_title": "Sales Revenue",
+            "category_name": "Operating Revenue",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "4100",
+            "account_title": "Sales Discount",
+            "category_name": "Operating Revenue",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "5000",
+            "account_title": "Cost of Goods Sold",
+            "category_name": "Cost of Goods Sold",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "5100",
+            "account_title": "Purchase Discount",
+            "category_name": "Cost of Goods Sold",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "6000",
+            "account_title": "Rent Expense",
+            "category_name": "Operating Expenses",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "6100",
+            "account_title": "Salaries Expense",
+            "category_name": "Operating Expenses",
+            "level": 1,
+            "is_system": true
+        },
+        {
+            "account_code": "6200",
+            "account_title": "Utilities Expense",
+            "category_name": "Operating Expenses",
+            "level": 1,
+            "is_system": true
+        }
+    ],
+    "gl_setup": {
+        "inventory_account_code": "1200",
+        "cogs_account_code": "5000",
+        "sales_account_code": "4000",
+        "receivable_account_code": "1100",
+        "payable_account_code": "2000",
+        "cash_account_code": "1001",
+        "tax_output_account_code": "2100",
+        "tax_input_account_code": "2200",
+        "sales_discount_account_code": "4100",
+        "purchase_discount_account_code": "5100"
+    },
+    "roles": [
+        {
+            "role_name": "Super User",
+            "description": "Full access to all modules and settings"
+        },
+        {
+            "role_name": "Admin",
+            "description": "Administrative access"
+        },
+        {
+            "role_name": "Manager",
+            "description": "Can manage staff and view reports"
+        },
+        {
+            "role_name": "Staff",
+            "description": "Limited access to daily operations"
+        }
+    ],
+    "role_privileges": [
+        {
+            "role_name": "Admin",
+            "module": "accounting",
+            "can_view": true,
+            "can_add": true,
+            "can_edit": true,
+            "can_delete": true
+        },
+        {
+            "role_name": "Manager",
+            "module": "accounting",
+            "can_view": true,
+            "can_add": true,
+            "can_edit": false,
+            "can_delete": false
+        }
+    ]
+}
