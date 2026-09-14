@@ -341,7 +341,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
     }
   }
 
-  int _validateAndGetSYear(DateTime date) {
+  int validateAndGetSYear(DateTime date) {
     if (state.financialSessions.isEmpty) {
       throw Exception(
           'No financial years configured. Please configure a financial session first.');
@@ -387,7 +387,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
   Future<void> createTransaction(Transaction transaction) async {
     try {
       // Validate SYear
-      final sYear = _validateAndGetSYear(transaction.voucherDate);
+      final sYear = validateAndGetSYear(transaction.voucherDate);
 
       final orgId = _ref.read(organizationProvider).selectedOrganizationId;
       await _ref.read(subscriptionServiceProvider).checkAction(
@@ -428,7 +428,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
   Future<void> updateTransaction(Transaction transaction) async {
     try {
       // Validate SYear
-      final sYear = _validateAndGetSYear(transaction.voucherDate);
+      final sYear = validateAndGetSYear(transaction.voucherDate);
 
       final txWithYear = Transaction(
         id: transaction.id,
@@ -851,7 +851,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
   Future<void> addInvoice(Invoice invoice) async {
     try {
 
-      final sYear = _validateAndGetSYear(invoice.invoiceDate);
+      final sYear = validateAndGetSYear(invoice.invoiceDate);
       final orgId = _ref.read(organizationProvider).selectedOrganizationId;
       await _ref.read(subscriptionServiceProvider).checkAction(orgId ?? 0, 'invoice');
       final storeId = _ref.read(organizationProvider).selectedStore?.id;
@@ -883,7 +883,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
       Invoice invoice, List<Map<String, dynamic>> itemMaps) async {
     try {
 
-      final sYear = _validateAndGetSYear(invoice.invoiceDate);
+      final sYear = validateAndGetSYear(invoice.invoiceDate);
       final orgId = _ref.read(organizationProvider).selectedOrganizationId;
       await _ref.read(subscriptionServiceProvider).checkAction(orgId ?? 0, 'invoice');
       final storeId = _ref.read(organizationProvider).selectedStore?.id;
@@ -947,7 +947,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
   Future<void> updateInvoiceWithItems(
       Invoice invoice, List<Map<String, dynamic>> itemMaps) async {
     try {
-      final sYear = _validateAndGetSYear(invoice.invoiceDate);
+      final sYear = validateAndGetSYear(invoice.invoiceDate);
       final orgId = _ref.read(organizationProvider).selectedOrganizationId;
       final storeId = _ref.read(organizationProvider).selectedStore?.id;
 
@@ -1011,7 +1011,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
   Future<void> updateInvoice(Invoice invoice,
       {int? organizationId, int? storeId}) async {
     try {
-      final sYear = _validateAndGetSYear(invoice.invoiceDate);
+      final sYear = validateAndGetSYear(invoice.invoiceDate);
 
       final invoiceWithYear = Invoice(
         id: invoice.id,
@@ -1138,7 +1138,7 @@ class AccountingNotifier extends StateNotifier<AccountingState> {
       if (partner != null && partner.chartOfAccountId != null) {
         final orgId = _ref.read(organizationProvider).selectedOrganizationId;
         final storeId = _ref.read(organizationProvider).selectedStore?.id;
-        final sYear = _validateAndGetSYear(invoice.invoiceDate);
+        final sYear = validateAndGetSYear(invoice.invoiceDate);
 
         // Ensure GL Setup is loaded
         if (state.glSetup == null) {

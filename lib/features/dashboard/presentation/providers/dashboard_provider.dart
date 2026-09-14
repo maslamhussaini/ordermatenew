@@ -204,6 +204,78 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
       final pr =
           await fetchCount('omtbl_invoices', null, null, invoiceType: 'PR');
 
+      double todayRecipeSales = 0;
+      double todayRecipeCogs = 0;
+      double todayRecipeProfit = 0;
+      double todayRecipeQtySold = 0;
+      List<Map<String, dynamic>> topProfitItems = [];
+
+      try {
+        final today = DateTime.now();
+        final todayStr = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+        var salesQuery = client.from('omtbl_recipe_sales').select('total_amount, total_cost, total_profit');
+        if (organizationId != null) {
+          salesQuery = salesQuery.eq('organization_id', organizationId!);
+        }
+        if (storeId != null) {
+          salesQuery = salesQuery.eq('store_id', storeId!);
+        }
+        salesQuery = salesQuery.eq('sale_date', todayStr);
+        final salesResponse = await salesQuery.timeout(const Duration(seconds: 15));
+        final salesList = salesResponse as List;
+        for (var s in salesList) {
+          todayRecipeSales += (s['total_amount'] as num?)?.toDouble() ?? 0.0;
+          todayRecipeCogs += (s['total_cost'] as num?)?.toDouble() ?? 0.0;
+          todayRecipeProfit += (s['total_profit'] as num?)?.toDouble() ?? 0.0;
+        }
+
+        var itemsQuery = client.from('omtbl_recipe_sale_items').select('quantity_sold');
+        if (organizationId != null) {
+          itemsQuery = itemsQuery.eq('organization_id', organizationId!);
+        }
+        if (storeId != null) {
+          itemsQuery = itemsQuery.eq('store_id', storeId!);
+        }
+        final itemsResponse = await itemsQuery.timeout(const Duration(seconds: 15));
+        final itemsList = itemsResponse as List;
+        for (var item in itemsList) {
+          todayRecipeQtySold += (item['quantity_sold'] as num?)?.toDouble() ?? 0.0;
+        }
+
+        var topQuery = client.from('omtbl_recipe_sale_items').select('product_id, quantity_sold, amount, cost, profit');
+        if (organizationId != null) {
+          topQuery = topQuery.eq('organization_id', organizationId!);
+        }
+        if (storeId != null) {
+          topQuery = topQuery.eq('store_id', storeId!);
+        }
+        final topResponse = await topQuery.order('profit', ascending: false).limit(5).timeout(const Duration(seconds: 15));
+        final topList = topResponse as List;
+
+        final productIds = topList.map((e) => e['product_id'] as String).toSet().toList();
+        final productsMap = <String, String>{};
+        if (productIds.isNotEmpty) {
+          final productsResponse = await client.from('omtbl_products').select('id, name').inFilter('id', productIds).timeout(const Duration(seconds: 15));
+          for (var p in productsResponse as List) {
+            productsMap[p['id'] as String] = p['name'] as String? ?? 'Unknown';
+          }
+        }
+
+        topProfitItems = topList.map((e) {
+          return {
+            'product_id': e['product_id'] as String,
+            'product_name': productsMap[e['product_id'] as String] ?? 'Unknown',
+            'quantity_sold': (e['quantity_sold'] as num?)?.toDouble() ?? 0.0,
+            'amount': (e['amount'] as num?)?.toDouble() ?? 0.0,
+            'cost': (e['cost'] as num?)?.toDouble() ?? 0.0,
+            'profit': (e['profit'] as num?)?.toDouble() ?? 0.0,
+          };
+        }).toList();
+      } catch (e) {
+        debugPrint('Dashboard: Failed to load recipe stats: $e');
+      }
+
       final newStats = DashboardStats(
         totalCustomers: customers,
         totalProducts: products,
@@ -219,6 +291,11 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         salesReturnsCount: sr,
         purchaseInvoicesCount: pi,
         purchaseReturnsCount: pr,
+        todayRecipeSales: todayRecipeSales,
+        todayRecipeCogs: todayRecipeCogs,
+        todayRecipeGrossProfit: todayRecipeProfit,
+        todayRecipeQtySold: todayRecipeQtySold,
+        topProfitRecipeItems: topProfitItems,
       );
 
       if (!mounted) return;
@@ -353,6 +430,70 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
           "SELECT COUNT(*) FROM local_invoices WHERE id_invoice_type = 'PR'$invFilter",
           invArgs);
 
+      double todayRecipeSales = 0;
+      double todayRecipeCogs = 0;
+      double todayRecipeProfit = 0;
+      double todayRecipeQtySold = 0;
+      List<Map<String, dynamic>> topProfitItems = [];
+
+      try {
+        final today = DateTime.now();
+        final todayStart = DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
+        final todayEnd = todayStart + const Duration(days: 1).inMilliseconds;
+
+        final recipeSalesRows = await db.query(
+          'local_recipe_sales',
+          columns: ['total_amount', 'total_cost', 'total_profit'],
+          where: 'sale_date >= ? AND sale_date < ?',
+          whereArgs: [todayStart, todayEnd],
+        );
+        for (var row in recipeSalesRows) {
+          todayRecipeSales += (row['total_amount'] as num?)?.toDouble() ?? 0.0;
+          todayRecipeCogs += (row['total_cost'] as num?)?.toDouble() ?? 0.0;
+          todayRecipeProfit += (row['total_profit'] as num?)?.toDouble() ?? 0.0;
+        }
+
+        final recipeItemsRows = await db.query(
+          'local_recipe_sale_items',
+          columns: ['product_id', 'quantity_sold', 'amount', 'cost', 'profit'],
+        );
+        for (var row in recipeItemsRows) {
+          todayRecipeQtySold += (row['quantity_sold'] as num?)?.toDouble() ?? 0.0;
+        }
+
+        if (recipeItemsRows.isNotEmpty) {
+          final productIds = recipeItemsRows.map((r) => r['product_id'] as String).toSet().toList();
+          final productsMap = <String, String>{};
+          if (productIds.isNotEmpty) {
+            final placeholders = List.filled(productIds.length, '?').join(',');
+            final productRows = await db.query(
+              'local_products',
+              columns: ['id', 'name'],
+              where: 'id IN ($placeholders)',
+              whereArgs: productIds,
+            );
+            for (var p in productRows) {
+              productsMap[p['id'] as String] = p['name'] as String? ?? 'Unknown';
+            }
+          }
+
+          final items = recipeItemsRows.map((row) {
+            return {
+              'product_id': row['product_id'] as String,
+              'product_name': productsMap[row['product_id'] as String] ?? 'Unknown',
+              'quantity_sold': (row['quantity_sold'] as num?)?.toDouble() ?? 0.0,
+              'amount': (row['amount'] as num?)?.toDouble() ?? 0.0,
+              'cost': (row['cost'] as num?)?.toDouble() ?? 0.0,
+              'profit': (row['profit'] as num?)?.toDouble() ?? 0.0,
+            };
+          }).toList();
+          items.sort((a, b) => (b['profit'] as double).compareTo(a['profit'] as double));
+          topProfitItems = items.take(5).toList();
+        }
+      } catch (e) {
+        debugPrint('Dashboard: Failed to load local recipe stats: $e');
+      }
+
       final newStats = DashboardStats(
         totalCustomers: customersCount,
         totalProducts: productsCount,
@@ -361,13 +502,18 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         ordersApproved: getCount(approved),
         ordersPending: getCount(pending),
         ordersRejected: getCount(rejected),
-        totalVendors: vendorsCount, // Using aligned Vendor Logic
+        totalVendors: vendorsCount,
         totalSuppliers: suppliersCount,
         totalEmployees: employeesCount,
         salesInvoicesCount: getCount(si),
         salesReturnsCount: getCount(sr),
         purchaseInvoicesCount: getCount(pi),
         purchaseReturnsCount: getCount(pr),
+        todayRecipeSales: todayRecipeSales,
+        todayRecipeCogs: todayRecipeCogs,
+        todayRecipeGrossProfit: todayRecipeProfit,
+        todayRecipeQtySold: todayRecipeQtySold,
+        topProfitRecipeItems: topProfitItems,
       );
 
       // debugPrint('Dashboard: Stats loaded for store $storeId. Vendors: $vendorsCount');

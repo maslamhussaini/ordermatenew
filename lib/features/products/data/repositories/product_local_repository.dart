@@ -55,6 +55,7 @@ class ProductLocalRepository {
             'defult_discount_percnt': p.defaultDiscountPercent,
             'defult_discount_percnt_limit': p.defaultDiscountPercentLimit,
             'sales_discount_id': p.salesDiscountGlId,
+            'is_recipe': p.isRecipe ? 1 : 0,
             'is_synced': 1,
           },
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -172,6 +173,7 @@ class ProductLocalRepository {
           'defult_discount_percnt': p.defaultDiscountPercent,
           'defult_discount_percnt_limit': p.defaultDiscountPercentLimit,
           'sales_discount_id': p.salesDiscountGlId,
+          'is_recipe': p.isRecipe ? 1 : 0,
           'is_synced': 0,
         },
         conflictAlgorithm: ConflictAlgorithm.replace);
@@ -206,6 +208,7 @@ class ProductLocalRepository {
           'defult_discount_percnt': p.defaultDiscountPercent,
           'defult_discount_percnt_limit': p.defaultDiscountPercentLimit,
           'sales_discount_id': p.salesDiscountGlId,
+          'is_recipe': p.isRecipe ? 1 : 0,
           'is_synced': 0,
         },
         where: 'id = ?',
@@ -270,6 +273,7 @@ class ProductLocalRepository {
           (map['defult_discount_percnt_limit'] as num?)?.toDouble() ?? 0.0,
       salesDiscountGlId: (map['sales_discount_id'] as String?) ??
           (map['sales_discount_gl_id'] as String?),
+      isRecipe: (map['is_recipe'] as int?) == 1,
     );
   }
 }

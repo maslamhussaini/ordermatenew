@@ -34,6 +34,7 @@ class ProductModel extends Product {
     super.defaultDiscountPercent,
     super.defaultDiscountPercentLimit,
     super.salesDiscountGlId,
+    super.isRecipe,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -89,6 +90,7 @@ class ProductModel extends Product {
           (json['defult_discount_percnt_limit'] as num?)?.toDouble() ?? 0.0,
       salesDiscountGlId: (json['sales_discount_id'] as String?) ??
           (json['sales_discount_gl_id'] as String?),
+      isRecipe: json['is_recipe'] == 1 || json['is_recipe'] == true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -120,6 +122,7 @@ class ProductModel extends Product {
       'defult_discount_percnt': defaultDiscountPercent,
       'defult_discount_percnt_limit': defaultDiscountPercentLimit,
       'sales_discount_id': salesDiscountGlId,
+      'is_recipe': isRecipe,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

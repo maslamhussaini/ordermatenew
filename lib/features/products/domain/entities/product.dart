@@ -34,6 +34,7 @@ class Product extends Equatable {
     this.defaultDiscountPercent = 0.0,
     this.defaultDiscountPercentLimit = 0.0,
     this.salesDiscountGlId,
+    this.isRecipe = false,
   });
 
   final String id;
@@ -71,6 +72,7 @@ class Product extends Equatable {
   final double defaultDiscountPercent;
   final double defaultDiscountPercentLimit;
   final String? salesDiscountGlId;
+  final bool isRecipe;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -102,45 +104,47 @@ class Product extends Equatable {
     String? revenueGlId,
     double? defaultDiscountPercent,
     double? defaultDiscountPercentLimit,
-    String? salesDiscountGlId,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return Product(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      sku: sku ?? this.sku,
-      description: description ?? this.description,
-      rate: rate ?? this.rate,
-      cost: cost ?? this.cost,
-      businessPartnerId: businessPartnerId ?? this.businessPartnerId,
-      businessPartnerName: businessPartnerName ?? this.businessPartnerName,
-      productTypeId: productTypeId ?? this.productTypeId,
-      productTypeName: productTypeName ?? this.productTypeName,
-      categoryId: categoryId ?? this.categoryId,
-      categoryName: categoryName ?? this.categoryName,
-      brandId: brandId ?? this.brandId,
-      brandName: brandName ?? this.brandName,
-      uomId: uomId ?? this.uomId,
-      uomSymbol: uomSymbol ?? this.uomSymbol,
-      baseQuantity: baseQuantity ?? this.baseQuantity,
-      storeId: storeId ?? this.storeId,
-      organizationId: organizationId ?? this.organizationId,
-      isActive: isActive ?? this.isActive,
-      limitPrice: limitPrice ?? this.limitPrice,
-      stockQty: stockQty ?? this.stockQty,
-      inventoryGlId: inventoryGlId ?? this.inventoryGlId,
-      cogsGlId: cogsGlId ?? this.cogsGlId,
-      revenueGlId: revenueGlId ?? this.revenueGlId,
-      defaultDiscountPercent:
-          defaultDiscountPercent ?? this.defaultDiscountPercent,
-      defaultDiscountPercentLimit:
-          defaultDiscountPercentLimit ?? this.defaultDiscountPercentLimit,
-      salesDiscountGlId: salesDiscountGlId ?? this.salesDiscountGlId,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
+      String? salesDiscountGlId,
+      DateTime? createdAt,
+      DateTime? updatedAt,
+      bool? isRecipe,
+    }) {
+      return Product(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        sku: sku ?? this.sku,
+        description: description ?? this.description,
+        rate: rate ?? this.rate,
+        cost: cost ?? this.cost,
+        businessPartnerId: businessPartnerId ?? this.businessPartnerId,
+        businessPartnerName: businessPartnerName ?? this.businessPartnerName,
+        productTypeId: productTypeId ?? this.productTypeId,
+        productTypeName: productTypeName ?? this.productTypeName,
+        categoryId: categoryId ?? this.categoryId,
+        categoryName: categoryName ?? this.categoryName,
+        brandId: brandId ?? this.brandId,
+        brandName: brandName ?? this.brandName,
+        uomId: uomId ?? this.uomId,
+        uomSymbol: uomSymbol ?? this.uomSymbol,
+        baseQuantity: baseQuantity ?? this.baseQuantity,
+        storeId: storeId ?? this.storeId,
+        organizationId: organizationId ?? this.organizationId,
+        isActive: isActive ?? this.isActive,
+        limitPrice: limitPrice ?? this.limitPrice,
+        stockQty: stockQty ?? this.stockQty,
+        inventoryGlId: inventoryGlId ?? this.inventoryGlId,
+        cogsGlId: cogsGlId ?? this.cogsGlId,
+        revenueGlId: revenueGlId ?? this.revenueGlId,
+        defaultDiscountPercent:
+            defaultDiscountPercent ?? this.defaultDiscountPercent,
+        defaultDiscountPercentLimit:
+            defaultDiscountPercentLimit ?? this.defaultDiscountPercentLimit,
+        salesDiscountGlId: salesDiscountGlId ?? this.salesDiscountGlId,
+        isRecipe: isRecipe ?? this.isRecipe,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+    }
 
   // Note: Use formatCurrency() utility function in UI instead of these getters
   // to support dynamic currency from store
@@ -175,6 +179,7 @@ class Product extends Equatable {
         defaultDiscountPercent,
         defaultDiscountPercentLimit,
         salesDiscountGlId,
+        isRecipe,
         createdAt,
         updatedAt,
         storeId,

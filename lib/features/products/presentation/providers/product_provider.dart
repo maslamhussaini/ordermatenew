@@ -70,7 +70,7 @@ class ProductNotifier extends StateNotifier<ProductState> {
     }
   }
 
-  Future<void> addProduct(Product product) async {
+  Future<Product?> addProduct(Product product) async {
     state = state.copyWith(isLoading: true);
     final orgId = ref.read(organizationProvider).selectedOrganizationId;
 
@@ -80,35 +80,36 @@ class ProductNotifier extends StateNotifier<ProductState> {
       }
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
-      return;
+      return null;
     }
 
     final productWithOrg = product.copyWith(organizationId: orgId);
     try {
-      await repository.createProduct(productWithOrg);
-      if (!mounted) return;
+      final created = await repository.createProduct(productWithOrg);
+      if (!mounted) return null;
       await loadProducts();
       ref.read(dashboardProvider.notifier).refresh();
+      return created;
     } catch (e) {
       if (e.toString().contains('SocketException') ||
           e.toString().contains('Network')) {
         try {
           await localRepository.addProduct(product);
-          if (!mounted) return;
+          if (!mounted) return null;
           final localProducts = await localRepository.getLocalProducts(
               organizationId: orgId);
-          if (!mounted) return;
+          if (!mounted) return null;
           state = state.copyWith(isLoading: false, products: localProducts);
           ref.read(dashboardProvider.notifier).refresh();
-          return;
+          return null;
         } catch (localE) {
-          if (!mounted) return;
+          if (!mounted) return null;
           state = state.copyWith(
               isLoading: false, error: 'Offline add failed: $localE');
           rethrow;
         }
       }
-      if (!mounted) return;
+      if (!mounted) return null;
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }

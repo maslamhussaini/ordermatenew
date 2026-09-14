@@ -112,6 +112,7 @@ class ProductRepositoryImpl implements ProductRepository {
         defaultDiscountPercent: product.defaultDiscountPercent,
         defaultDiscountPercentLimit: product.defaultDiscountPercentLimit,
         salesDiscountGlId: product.salesDiscountGlId,
+        isRecipe: product.isRecipe,
         createdAt: product.createdAt,
         updatedAt: DateTime.now(),
       );
@@ -191,6 +192,7 @@ class ProductRepositoryImpl implements ProductRepository {
         defaultDiscountPercent: product.defaultDiscountPercent,
         defaultDiscountPercentLimit: product.defaultDiscountPercentLimit,
         salesDiscountGlId: product.salesDiscountGlId,
+        isRecipe: product.isRecipe,
         createdAt: product.createdAt,
         updatedAt: DateTime.now(),
       );

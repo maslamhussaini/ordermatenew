@@ -12,6 +12,7 @@ import 'package:ordermate/features/accounting/presentation/screens/invoice_entry
 import 'package:ordermate/features/products/presentation/screens/product_form_screen.dart';
 import 'package:ordermate/features/products/presentation/screens/product_list_screen.dart';
 import 'package:ordermate/features/products/presentation/screens/product_debug_screen.dart';
+import 'package:ordermate/features/products/presentation/screens/recipe_sale_screen.dart';
 import 'package:ordermate/features/inventory/presentation/screens/brand_list_screen.dart';
 import 'package:ordermate/features/inventory/presentation/screens/category_list_screen.dart';
 import 'package:ordermate/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
@@ -918,5 +919,15 @@ final List<AppRoute> coreRoutes = [
           roles: [UserRole.admin, UserRole.staff],
           builder: (_, __) => const PrinterSetupScreen()),
     ],
+  ),
+  AppRoute(
+    path: '/recipe-sale',
+    title: 'Daily Counter Sale',
+    routeName: 'recipe-sale',
+    module: 'products',
+    icon: Icons.point_of_sale,
+    roles: [UserRole.admin, UserRole.staff],
+    formId: 1,
+    builder: (_, __) => const RecipeSaleScreen(),
   ),
 ];

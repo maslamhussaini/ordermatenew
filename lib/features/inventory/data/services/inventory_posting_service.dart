@@ -139,6 +139,44 @@ class InventoryPostingService {
     );
   }
 
+  Future<void> postConsumption({
+    required int organizationId,
+    required String productId,
+    required int storeId,
+    required double quantity,
+    String? referenceTable,
+    String? referenceId,
+  }) async {
+    await postMovement(
+      organizationId: organizationId,
+      productId: productId,
+      storeId: storeId,
+      movementType: 'CONSUMPTION',
+      quantity: -quantity,
+      referenceTable: referenceTable,
+      referenceId: referenceId,
+    );
+  }
+
+  Future<void> postWastage({
+    required int organizationId,
+    required String productId,
+    required int storeId,
+    required double quantity,
+    String? referenceTable,
+    String? referenceId,
+  }) async {
+    await postMovement(
+      organizationId: organizationId,
+      productId: productId,
+      storeId: storeId,
+      movementType: 'WASTAGE',
+      quantity: -quantity,
+      referenceTable: referenceTable,
+      referenceId: referenceId,
+    );
+  }
+
   Future<double> getAvailableStock({
     required int organizationId,
     required String productId,
@@ -165,6 +203,8 @@ class InventoryPostingService {
         case 'PURCHASE_RETURN':
         case 'SALE':
         case 'TRANSFER_OUT':
+        case 'CONSUMPTION':
+        case 'WASTAGE':
           total -= qty;
           break;
         default:

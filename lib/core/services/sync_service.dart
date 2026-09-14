@@ -29,6 +29,31 @@ import 'package:ordermate/features/inventory/domain/repositories/stock_transfer_
 import 'package:ordermate/features/inventory/data/repositories/stock_transfer_local_repository.dart';
 import 'package:ordermate/features/inventory/presentation/providers/stock_transfer_provider.dart';
 import 'package:ordermate/features/inventory/data/models/stock_transfer_model.dart';
+import 'package:ordermate/features/products/domain/repositories/product_recipe_repository.dart';
+import 'package:ordermate/features/products/data/repositories/product_recipe_local_repository.dart';
+import 'package:ordermate/features/products/data/repositories/product_recipe_repository_impl.dart';
+import 'package:ordermate/features/products/domain/repositories/recipe_sale_repository.dart';
+import 'package:ordermate/features/products/data/repositories/recipe_sale_repository_impl.dart';
+import 'package:ordermate/features/products/data/repositories/recipe_sale_local_repository.dart';
+
+// Recipe Providers
+final productRecipeRepositoryProvider = Provider<ProductRecipeRepository>((ref) {
+  return ProductRecipeRepositoryImpl();
+});
+
+final productRecipeLocalRepositoryProvider =
+    Provider<ProductRecipeLocalRepository>((ref) {
+  return ProductRecipeLocalRepository();
+});
+
+final recipeSaleRepositoryProvider = Provider<RecipeSaleRepository>((ref) {
+  return RecipeSaleRepositoryImpl();
+});
+
+final recipeSaleLocalRepositoryProvider =
+    Provider<RecipeSaleLocalRepository>((ref) {
+  return RecipeSaleLocalRepository();
+});
 
 // Inventory Providers
 final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
@@ -65,6 +90,10 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     ref.watch(localAccountingRepositoryProvider),
     ref.watch(stockTransferRepositoryProvider),
     ref.watch(stockTransferLocalRepositoryProvider),
+    ref.watch(productRecipeRepositoryProvider),
+    ref.watch(productRecipeLocalRepositoryProvider),
+    ref.watch(recipeSaleRepositoryProvider),
+    ref.watch(recipeSaleLocalRepositoryProvider),
   );
 });
 
@@ -184,6 +213,10 @@ class SyncService {
     this._accountingLocalRepository,
     this._transferRepository,
     this._transferLocalRepository,
+    this._recipeRepository,
+    this._recipeLocalRepository,
+    this._recipeSaleRepository,
+    this._recipeSaleLocalRepository,
   );
 
   final Ref _ref;
@@ -199,6 +232,10 @@ class SyncService {
   final LocalAccountingRepository _accountingLocalRepository;
   final StockTransferRepository _transferRepository;
   final StockTransferLocalRepository _transferLocalRepository;
+  final ProductRecipeRepository _recipeRepository;
+  final ProductRecipeLocalRepository _recipeLocalRepository;
+  final RecipeSaleRepository _recipeSaleRepository;
+  final RecipeSaleLocalRepository _recipeSaleLocalRepository;
 
   void _updateStatus(String message, double progress) {
     _ref.read(syncProgressProvider.notifier).updateMessage(message, progress);
@@ -239,6 +276,14 @@ class SyncService {
     final transfers = await _transferLocalRepository.getUnsyncedTransfers(
         organizationId: orgId);
     if (transfers.isNotEmpty) return true;
+
+    final recipes = await _recipeLocalRepository.getUnsyncedRecipes(
+        organizationId: orgId);
+    if (recipes.isNotEmpty) return true;
+
+    final recipeSales = await _recipeSaleLocalRepository.getUnsyncedRecipeSales(
+        organizationId: orgId);
+    if (recipeSales.isNotEmpty) return true;
 
     return false;
   }
@@ -302,6 +347,8 @@ class SyncService {
       await step('Syncing Partners', 0.8, syncPartners);
       await step('Syncing Orders', 0.9, syncOrders);
       await step('Syncing Stock Transfers', 0.95, syncStockTransfers);
+      await step('Syncing Recipes', 0.97, syncProductRecipes);
+      await step('Syncing Recipe Sales', 0.98, syncRecipeSales);
       await step('Updating Metadata', 1.0, syncMetadata);
     } catch (e, stack) {
       // Anything escaping the per-step guards is a hard abort.
@@ -737,6 +784,8 @@ class SyncService {
     await pushOrders();
     await pushAccounting();
     await pushStockTransfers();
+    await pushProductRecipes();
+    await pushRecipeSales();
   }
 
   Future<void> pushStockTransfers() async {
@@ -756,6 +805,45 @@ class SyncService {
       } catch (e) {
         debugPrint(
             'SyncService: Failed to push Stock Transfer ${transfer.transferNumber}: $e');
+      }
+    }
+  }
+
+  Future<void> pushProductRecipes() async {
+    final orgId = _ref.read(organizationProvider).selectedOrganizationId;
+    final unsynced = await _recipeLocalRepository.getUnsyncedRecipes(
+        organizationId: orgId);
+    if (unsynced.isEmpty) return;
+
+    debugPrint(
+        'SyncService: Found ${unsynced.length} unsynced Product Recipes to push');
+    for (final recipe in unsynced) {
+      try {
+        await _recipeRepository.createRecipe(recipe);
+        await _recipeLocalRepository.markRecipeAsSynced(recipe.id);
+        debugPrint('SyncService: Pushed Recipe ${recipe.id}');
+      } catch (e) {
+        debugPrint('SyncService: Failed to push Recipe ${recipe.id}: $e');
+      }
+    }
+  }
+
+  Future<void> pushRecipeSales() async {
+    final orgId = _ref.read(organizationProvider).selectedOrganizationId;
+    final unsynced = await _recipeSaleLocalRepository.getUnsyncedRecipeSales(
+        organizationId: orgId);
+    if (unsynced.isEmpty) return;
+
+    debugPrint(
+        'SyncService: Found ${unsynced.length} unsynced Recipe Sales to push');
+    for (final sale in unsynced) {
+      try {
+        final items = await _recipeSaleLocalRepository.getLocalRecipeSaleItems(sale.id);
+        await _recipeSaleRepository.createRecipeSale(sale, items);
+        await _recipeSaleLocalRepository.markRecipeSaleAsSynced(sale.id);
+        debugPrint('SyncService: Pushed Recipe Sale ${sale.id}');
+      } catch (e) {
+        debugPrint('SyncService: Failed to push Recipe Sale ${sale.id}: $e');
       }
     }
   }
@@ -1066,6 +1154,71 @@ class SyncService {
           'SyncService: Stock Transfer Sync Complete. Cached ${transfers.length} items.');
     } catch (e) {
       debugPrint('SyncService: Stock Transfer Sync Failed: $e');
+    }
+  }
+
+  Future<void> syncProductRecipes() async {
+    final orgId = _ref.read(organizationProvider).selectedOrganizationId;
+
+    try {
+      debugPrint('SyncService: Starting Product Recipe Sync (Pull)...');
+      final recipes = await _recipeRepository.getRecipes(organizationId: orgId);
+
+      if (recipes.isEmpty) {
+        debugPrint('SyncService: No product recipes found.');
+        return;
+      }
+
+      await _recipeLocalRepository.cacheRecipes(recipes);
+
+      final db = await DatabaseHelper.instance.database;
+      await db.insert(
+        'sync_metadata',
+        {
+          'entity': 'product_recipes',
+          'last_sync': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      debugPrint(
+          'SyncService: Product Recipe Sync Complete. Cached ${recipes.length} items.');
+    } catch (e) {
+      debugPrint('SyncService: Product Recipe Sync Failed: $e');
+    }
+  }
+
+  Future<void> syncRecipeSales() async {
+    final orgId = _ref.read(organizationProvider).selectedOrganizationId;
+    final storeId = _ref.read(organizationProvider).selectedStore?.id;
+
+    try {
+      debugPrint('SyncService: Starting Recipe Sale Sync (Pull)...');
+      final sales = await _recipeSaleRepository.getRecipeSales(
+          organizationId: orgId, storeId: storeId);
+
+      if (sales.isEmpty) {
+        debugPrint('SyncService: No recipe sales found.');
+        return;
+      }
+
+      for (var sale in sales) {
+        final items = await _recipeSaleRepository.getRecipeSaleItems(sale.id);
+        await _recipeSaleLocalRepository.saveRecipeSale(sale, items, isSynced: true);
+      }
+
+      final db = await DatabaseHelper.instance.database;
+      await db.insert(
+        'sync_metadata',
+        {
+          'entity': 'recipe_sales',
+          'last_sync': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      debugPrint(
+          'SyncService: Recipe Sale Sync Complete. Cached ${sales.length} items.');
+    } catch (e) {
+      debugPrint('SyncService: Recipe Sale Sync Failed: $e');
     }
   }
 

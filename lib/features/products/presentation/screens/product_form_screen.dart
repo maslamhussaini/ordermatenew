@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ordermate/core/utils/iterable_extensions.dart';
 import 'package:ordermate/core/widgets/lookup_field.dart';
 
 import 'package:ordermate/features/inventory/domain/entities/brand.dart';
@@ -9,7 +10,9 @@ import 'package:ordermate/features/inventory/domain/entities/product_type.dart';
 import 'package:ordermate/features/inventory/domain/entities/unit_of_measure.dart';
 import 'package:ordermate/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:ordermate/features/products/domain/entities/product.dart';
+import 'package:ordermate/features/products/domain/entities/product_recipe.dart';
 import 'package:ordermate/features/products/presentation/providers/product_provider.dart';
+import 'package:ordermate/features/products/presentation/providers/recipe_provider.dart';
 import 'package:ordermate/features/vendors/domain/entities/vendor.dart';
 import 'package:ordermate/features/vendors/presentation/providers/vendor_provider.dart';
 import 'package:ordermate/features/organization/presentation/providers/organization_provider.dart';
@@ -57,6 +60,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final ScrollController _scrollController = ScrollController();
   double _afterDiscountPrice = 0.0;
 
+  // Recipe state
+  final List<ProductRecipe> _ingredients = [];
+  bool _isRecipe = false;
+  double _recipeCost = 0.0;
+  bool _isRecipeLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +84,72 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     });
   }
 
+  bool _isRecipeProductType() {
+    if (_selectedTypeId == null) return false;
+    final productType = ref.read(inventoryProvider).productTypes.firstWhereOrNull(
+        (t) => t.id == _selectedTypeId);
+    return productType?.name.toLowerCase() == 'recipe';
+  }
+
+  void _addIngredient() {
+    setState(() {
+      _ingredients.add(ProductRecipe(
+        id: '',
+        productId: widget.productId ?? '',
+        componentProductId: '',
+        quantity: 0.0,
+        uomId: 0,
+        wastagePercent: 0.0,
+        organizationId: ref.read(organizationProvider).selectedOrganizationId ?? 0,
+      ));
+    });
+  }
+
+  void _removeIngredient(int index) {
+    setState(() {
+      _ingredients.removeAt(index);
+    });
+  }
+
+  Future<void> _loadRecipe(String productId) async {
+    if (!_isRecipeProductType()) {
+      setState(() {
+        _ingredients.clear();
+        _recipeCost = 0.0;
+      });
+      return;
+    }
+
+    setState(() => _isRecipeLoading = true);
+    try {
+      await ref.read(recipeProvider.notifier).loadRecipes(productId);
+      setState(() {
+        _ingredients.clear();
+        _ingredients.addAll(ref.read(recipeProvider).recipes);
+      });
+
+      final cost = await ref.read(recipeProvider.notifier).calculateRecipeCost(productId);
+      setState(() {
+        _recipeCost = cost;
+      });
+    } catch (e) {
+      debugPrint('ProductForm: Error loading recipe: $e');
+    } finally {
+      if (mounted) setState(() => _isRecipeLoading = false);
+    }
+  }
+
+  Future<void> _saveRecipe(String productId) async {
+    if (!_isRecipeProductType()) return;
+
+    try {
+      await ref.read(recipeProvider.notifier).saveRecipe(productId, _ingredients);
+    } catch (e) {
+      debugPrint('ProductForm: Error saving recipe: $e');
+      rethrow;
+    }
+  }
+
   Future<void> _loadInitialData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -83,11 +158,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       final orgId = ref.read(organizationProvider).selectedOrganizationId;
       debugPrint('ProductForm: Loading initial data for Org $orgId...');
 
-      // We will perform a fresh load to ensure data is up to date,
-      // but we catch errors for each section so one failure doesn't block the whole form.
-
       await Future.wait([
-        // Inventory
         ref
             .read(inventoryProvider.notifier)
             .loadAll()
@@ -96,7 +167,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           debugPrint('ProductForm: Inventory load error: $e');
           return;
         }),
-        // Vendors
         ref
             .read(vendorProvider.notifier)
             .loadVendors()
@@ -113,7 +183,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           debugPrint('ProductForm: Suppliers load error: $e');
           return;
         }),
-        // Accounting
         ref
             .read(accountingProvider.notifier)
             .loadAll(organizationId: orgId)
@@ -126,7 +195,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
       if (!mounted) return;
 
-      // Log Status
       final accState = ref.read(accountingProvider);
       debugPrint(
           'ProductForm: Data Load Complete. Accounts: ${accState.accounts.length}');
@@ -141,7 +209,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         }
       }
 
-      // Handle extra from navigation
       final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
       if (extra != null && extra.containsKey('vendorId')) {
         final vId = extra['vendorId'] as String;
@@ -161,7 +228,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         }
       }
 
-      // If editing, populate fields
       if (widget.productId != null) {
         final products = ref.read(productProvider).products;
         if (products.isEmpty) {
@@ -210,11 +276,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           _selectedBusinessPartnerId = product.businessPartnerId;
         }
 
-        // If sales discount account is missing, try to get from GLSetup
         _selectedSalesDiscountGlId ??=
             ref.read(accountingProvider).glSetup?.salesDiscountAccountId;
+
+        final selectedType = ref.read(inventoryProvider).productTypes
+            .firstWhereOrNull((t) => t.id == product.productTypeId);
+        _isRecipe = selectedType?.name.toLowerCase() == 'recipe';
+
+        if (_isRecipe) {
+          await _loadRecipe(widget.productId!);
+        }
       } else {
-        // New Product - default GL accounts from GLSetup
         final setup = ref.read(accountingProvider).glSetup;
         if (setup != null) {
           _selectedInventoryGlId = setup.inventoryAccountId;
@@ -257,7 +329,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final allAccounts = accState.accounts;
     final categories = accState.categories;
 
-    // 1. Precise Filter: Keyword match in Category Name + Level 3 or 4
     final strictMatches = allAccounts.where((account) {
       if (account.accountCategoryId == null) return false;
       final cat = categories.firstWhere(
@@ -268,7 +339,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               accountTypeId: 0,
               organizationId: 0,
               status: false));
-      // Use tighter contains check
       if (!cat.categoryName
           .toLowerCase()
           .contains(categoryKeyword.toLowerCase())) {
@@ -279,13 +349,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     }).toList();
 
     if (strictMatches.isNotEmpty) {
-      debugPrint(
-          'ProductForm: Found ${strictMatches.length} accounts for "$categoryKeyword" (Strict)');
       return strictMatches
         ..sort((a, b) => a.accountCode.compareTo(b.accountCode));
     }
 
-    // 2. Relaxed Filter: Keyword match in Category OR Account Title
     final relaxedMatches = allAccounts.where((account) {
       final cat = categories.firstWhere(
           (c) => c.id == account.accountCategoryId,
@@ -298,7 +365,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       final matchesCategory = cat.categoryName
           .toLowerCase()
           .contains(categoryKeyword.toLowerCase());
-      // Also check account title for the keyword
       final matchesTitle = account.accountTitle
           .toLowerCase()
           .contains(categoryKeyword.toLowerCase());
@@ -306,15 +372,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     }).toList();
 
     if (relaxedMatches.isNotEmpty) {
-      debugPrint(
-          'ProductForm: Found ${relaxedMatches.length} accounts for "$categoryKeyword" (Relaxed)');
       return relaxedMatches
         ..sort((a, b) => a.accountCode.compareTo(b.accountCode));
     }
 
-    // 3. Fallback: Return all accounts (Better than empty)
-    debugPrint(
-        'ProductForm: No specific matches for "$categoryKeyword". Returning all accounts.');
     return allAccounts.toList()
       ..sort((a, b) => a.accountCode.compareTo(b.accountCode));
   }
@@ -355,10 +416,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         updatedAt: DateTime.now(),
       );
 
+      String? savedProductId;
       if (widget.productId == null) {
-        await ref.read(productProvider.notifier).addProduct(product);
+        final newProduct = await ref.read(productProvider.notifier).addProduct(product);
+        savedProductId = newProduct?.id;
       } else {
         await ref.read(productProvider.notifier).updateProduct(product);
+        savedProductId = widget.productId;
+      }
+
+      if (savedProductId != null && _isRecipe) {
+        await _saveRecipe(savedProductId);
       }
 
       if (mounted) {
@@ -503,8 +571,21 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                       : (inventoryState.productTypes.isEmpty
                                           ? 'No Product Types Found'
                                           : 'Select Product Type'),
-                                  onChanged: (v) =>
-                                      setState(() => _selectedTypeId = v),
+                                  onChanged: (v) {
+                                    setState(() => _selectedTypeId = v);
+                                    final isNowRecipe = v != null &&
+                                        inventoryState.productTypes
+                                            .any((t) => t.id == v && t.name.toLowerCase() == 'recipe');
+                                    if (isNowRecipe != _isRecipe) {
+                                      setState(() {
+                                        _isRecipe = isNowRecipe;
+                                        if (!isNowRecipe) {
+                                          _ingredients.clear();
+                                          _recipeCost = 0.0;
+                                        }
+                                      });
+                                    }
+                                  },
                                   validator: (v) => v == null
                                       ? 'Please select a Product Type'
                                       : null,
@@ -597,6 +678,241 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        if (_isRecipe) ...[
+                          Card(
+                            elevation: 2,
+                            shadowColor: Colors.black12,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSectionHeader(
+                                      'Recipe / Ingredients', Icons.restaurant_outlined),
+                                  const SizedBox(height: 20),
+                                  if (_isRecipeLoading)
+                                    const Center(child: CircularProgressIndicator())
+                                  else ...[
+                                    if (_ingredients.isEmpty)
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                                        child: Text('No ingredients added yet. Tap + to add.'),
+                                      )
+                                    else
+                                      ListView.builder(
+                                        shrinkWrap: true,
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        itemCount: _ingredients.length,
+                                        itemBuilder: (context, index) {
+                                          final ingredient = _ingredients[index];
+                                          final component = ref
+                                              .read(productProvider)
+                                              .products
+                                              .firstWhereOrNull((p) => p.id == ingredient.componentProductId);
+                                          final lineCost = component != null
+                                              ? (ingredient.quantity * component.cost)
+                                              : 0.0;
+
+                                          return Card(
+                                            margin: const EdgeInsets.only(bottom: 12),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16),
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: LookupField<Product, String>(
+                                                          label: 'Ingredient',
+                                                          value: ingredient.componentProductId.isEmpty
+                                                              ? null
+                                                              : ingredient.componentProductId,
+                                                          prefixIcon: Icons.shopping_basket_outlined,
+                                                          items: ref.read(productProvider).products
+                                                              .where((p) => p.id != widget.productId)
+                                                              .toList(),
+                                                          onChanged: (v) {
+                                                            setState(() {
+                                                              _ingredients[index] =
+                                                                  ingredient.copyWith(componentProductId: v ?? '');
+                                                            });
+                                                          },
+                                                          labelBuilder: (item) => item.name,
+                                                          valueBuilder: (item) => item.id,
+                                                          validator: (v) => v == null || v.isEmpty
+                                                              ? 'Required'
+                                                              : null,
+                                                        ),
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                                        onPressed: () => _removeIngredient(index),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: TextFormField(
+                                                          decoration: const InputDecoration(
+                                                            labelText: 'Quantity',
+                                                            border: OutlineInputBorder(),
+                                                          ),
+                                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                          initialValue: ingredient.quantity == 0
+                                                              ? ''
+                                                              : ingredient.quantity.toString(),
+                                                          onChanged: (value) {
+                                                            final qty = double.tryParse(value) ?? 0.0;
+                                                            setState(() {
+                                                              _ingredients[index] =
+                                                                  ingredient.copyWith(quantity: qty);
+                                                            });
+                                                          },
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: LookupField<UnitOfMeasure, int>(
+                                                          label: 'UOM',
+                                                          value: ingredient.uomId == 0
+                                                              ? null
+                                                              : ingredient.uomId,
+                                                          prefixIcon: Icons.straighten_outlined,
+                                                          items: inventoryState.unitsOfMeasure,
+                                                          onChanged: (v) {
+                                                            setState(() {
+                                                              _ingredients[index] =
+                                                                  ingredient.copyWith(uomId: v ?? 0);
+                                                            });
+                                                          },
+                                                          labelBuilder: (item) => item.name,
+                                                          valueBuilder: (item) => item.id,
+                                                          validator: (v) => v == null || v == 0
+                                                              ? 'Required'
+                                                              : null,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: TextFormField(
+                                                          decoration: const InputDecoration(
+                                                            labelText: 'Wastage % (optional)',
+                                                            border: OutlineInputBorder(),
+                                                          ),
+                                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                          initialValue: ingredient.wastagePercent == 0
+                                                              ? ''
+                                                              : ingredient.wastagePercent.toString(),
+                                                          onChanged: (value) {
+                                                            final wastage = double.tryParse(value) ?? 0.0;
+                                                            setState(() {
+                                                              _ingredients[index] =
+                                                                  ingredient.copyWith(wastagePercent: wastage);
+                                                            });
+                                                          },
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.grey.shade100,
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Text(
+                                                                'Component Cost',
+                                                                style: Theme.of(context).textTheme.bodySmall,
+                                                              ),
+                                                              Text(
+                                                                '\$${component?.cost.toStringAsFixed(2) ?? '0.00'}',
+                                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                                      fontWeight: FontWeight.bold,
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.indigo.shade50,
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Text(
+                                                                'Line Cost',
+                                                                style: Theme.of(context).textTheme.bodySmall,
+                                                              ),
+                                                              Text(
+                                                                '\$${lineCost.toStringAsFixed(2)}',
+                                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                                      fontWeight: FontWeight.bold,
+                                                                      color: Theme.of(context).primaryColor,
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: _addIngredient,
+                                          icon: const Icon(Icons.add),
+                                          label: const Text('Add Ingredient'),
+                                        ),
+                                        const Spacer(),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              'Total Recipe Cost:',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                            Text(
+                                              '\$${_recipeCost.toStringAsFixed(2)}',
+                                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).primaryColor,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                              ],
+                                ),
+                              ),
+                          ),
+                          ],
                         const SizedBox(height: 20),
                         Card(
                           elevation: 2,

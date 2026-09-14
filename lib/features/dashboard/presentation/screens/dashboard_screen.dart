@@ -590,10 +590,92 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     color: Colors.blueGrey,
                                     onTap: () => context.push('/inventory'),
                                   ),
-                              ],
-                            ),
- 
-                          // 5. SUPPLIERS SECTION (Inventory)
+                               ],
+                             ),
+
+                           // Recipe/Counter Sale KPIs
+                           if (auth.can('products', Permission.read) || auth.can('reports', Permission.read))
+                             _buildCollapsibleSection(
+                               title: 'Counter Sale',
+                               icon: Icons.restaurant_rounded,
+                               isExpanded: _expandedSections['Counter Sale'] ?? true,
+                               onToggle: () => setState(() =>
+                                   _expandedSections['Counter Sale'] =
+                                       !(_expandedSections['Counter Sale'] ?? true)),
+                               cards: [
+                                 StatCard(
+                                   title: 'Today Recipe Sales',
+                                   value: '\$${(stats?.todayRecipeSales ?? 0).toStringAsFixed(2)}',
+                                   icon: Icons.point_of_sale_rounded,
+                                   color: const Color(0xFF009688),
+                                 ),
+                                 StatCard(
+                                   title: 'Today COGS',
+                                   value: '\$${(stats?.todayRecipeCogs ?? 0).toStringAsFixed(2)}',
+                                   icon: Icons.calculate_rounded,
+                                   color: const Color(0xFFFF7043),
+                                 ),
+                                 StatCard(
+                                   title: 'Today Gross Profit',
+                                   value: '\$${(stats?.todayRecipeGrossProfit ?? 0).toStringAsFixed(2)}',
+                                   icon: Icons.trending_up_rounded,
+                                   color: const Color(0xFF4CAF50),
+                                 ),
+                                 StatCard(
+                                   title: 'Qty Sold',
+                                   value: '${(stats?.todayRecipeQtySold ?? 0).toStringAsFixed(1)}',
+                                   icon: Icons.shopping_cart_rounded,
+                                   color: const Color(0xFF2196F3),
+                                 ),
+                               ],
+                             ),
+
+                           // Top Profit Items
+                           if (auth.can('products', Permission.read) || auth.can('reports', Permission.read))
+                             _buildCollapsibleSection(
+                               title: 'Top Profit Items',
+                               icon: Icons.trending_up_rounded,
+                               isExpanded: _expandedSections['Top Profit Items'] ?? false,
+                               onToggle: () => setState(() =>
+                                   _expandedSections['Top Profit Items'] =
+                                       !(_expandedSections['Top Profit Items'] ?? false)),
+                               cards: [
+                                 if (stats?.topProfitRecipeItems == null || stats!.topProfitRecipeItems.isEmpty)
+                                   const Padding(
+                                     padding: EdgeInsets.all(16.0),
+                                     child: Text('No recipe sales data available yet.'),
+                                   )
+                                 else
+                                   SingleChildScrollView(
+                                     scrollDirection: Axis.horizontal,
+                                     child: DataTable(
+                                       columns: const [
+                                         DataColumn(label: Text('Product')),
+                                         DataColumn(label: Text('Qty Sold'), numeric: true),
+                                         DataColumn(label: Text('Sales'), numeric: true),
+                                         DataColumn(label: Text('Cost'), numeric: true),
+                                         DataColumn(label: Text('Profit'), numeric: true),
+                                       ],
+                                       rows: stats!.topProfitRecipeItems.map((item) {
+                                         return DataRow(
+                                           cells: [
+                                             DataCell(Text(item['product_name']?.toString() ?? 'Unknown')),
+                                             DataCell(Text((item['quantity_sold'] as num?)?.toStringAsFixed(1) ?? '0')),
+                                             DataCell(Text('\$${(item['amount'] as num?)?.toStringAsFixed(2) ?? '0.00'}')),
+                                             DataCell(Text('\$${(item['cost'] as num?)?.toStringAsFixed(2) ?? '0.00'}')),
+                                             DataCell(Text(
+                                               '\$${(item['profit'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                               style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                             )),
+                                           ],
+                                         );
+                                       }).toList(),
+                                     ),
+                                   ),
+                               ],
+                             ),
+
+                           // 5. SUPPLIERS SECTION (Inventory)
                           if (selectedOrg == null || inventoryAccess.value == true)
                             _buildCollapsibleSection(
                               title: 'Suppliers',
@@ -723,7 +805,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     );
                                   },
                                 ),
-                              ]
+                              ],
                             ],
                           ),
                         ],

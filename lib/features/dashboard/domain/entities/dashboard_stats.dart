@@ -19,6 +19,11 @@ class DashboardStats extends Equatable {
     this.salesReturnsCount = 0,
     this.purchaseInvoicesCount = 0,
     this.purchaseReturnsCount = 0,
+    this.todayRecipeSales = 0.0,
+    this.todayRecipeCogs = 0.0,
+    this.todayRecipeGrossProfit = 0.0,
+    this.todayRecipeQtySold = 0.0,
+    this.topProfitRecipeItems = const [],
   });
   final int totalCustomers;
   final int totalProducts;
@@ -35,6 +40,11 @@ class DashboardStats extends Equatable {
   final int salesReturnsCount;
   final int purchaseInvoicesCount;
   final int purchaseReturnsCount;
+  final double todayRecipeSales;
+  final double todayRecipeCogs;
+  final double todayRecipeGrossProfit;
+  final double todayRecipeQtySold;
+  final List<Map<String, dynamic>> topProfitRecipeItems;
 
   int get totalOrders =>
       ordersBooked + ordersApproved + ordersPending + ordersRejected;
@@ -56,5 +66,10 @@ class DashboardStats extends Equatable {
         salesReturnsCount,
         purchaseInvoicesCount,
         purchaseReturnsCount,
+        todayRecipeSales,
+        todayRecipeCogs,
+        todayRecipeGrossProfit,
+        todayRecipeQtySold,
+        topProfitRecipeItems,
       ];
 }

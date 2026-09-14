@@ -7,7 +7,7 @@ import 'package:ordermate/core/utils/password_hasher.dart';
 class DatabaseHelper {
   DatabaseHelper._init();
   static final DatabaseHelper instance = DatabaseHelper._init();
-  static const int _databaseVersion = 78;
+  static const int _databaseVersion = 80;
   static Database? _database;
   static Future<Database>? _dbOpenFuture;
 
@@ -59,7 +59,8 @@ class DatabaseHelper {
           updated_at INTEGER,
           created_at INTEGER,
           is_synced INTEGER DEFAULT 1,
-          items_payload TEXT
+          items_payload TEXT,
+          is_recipe INTEGER DEFAULT 0
         )
       ''');
 
@@ -907,7 +908,8 @@ class DatabaseHelper {
           is_active INTEGER DEFAULT 1,
           updated_at INTEGER,
           is_synced INTEGER DEFAULT 1,
-          items_payload TEXT
+          items_payload TEXT,
+          is_recipe INTEGER DEFAULT 0
         )
       ''');
 
@@ -2328,6 +2330,81 @@ class DatabaseHelper {
         debugPrint('Database: v78 migration error: $e');
       }
       debugPrint('Database: v78 migration complete.');
+    }
+    if (oldVersion < 79) {
+      debugPrint('Database: Starting v79 migration (recipe tables)...');
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_product_recipes(
+            id TEXT PRIMARY KEY,
+            product_id TEXT NOT NULL,
+            component_product_id TEXT NOT NULL,
+            quantity REAL NOT NULL DEFAULT 0,
+            uom_id INTEGER NOT NULL DEFAULT 0,
+            wastage_percent REAL NOT NULL DEFAULT 0,
+            organization_id INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER,
+            updated_at INTEGER,
+            is_synced INTEGER DEFAULT 1
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_recipe_sales(
+            id TEXT PRIMARY KEY,
+            organization_id INTEGER NOT NULL DEFAULT 0,
+            store_id INTEGER NOT NULL DEFAULT 0,
+            sale_date INTEGER,
+            total_amount REAL NOT NULL DEFAULT 0,
+            total_cost REAL NOT NULL DEFAULT 0,
+            total_profit REAL NOT NULL DEFAULT 0,
+            created_by TEXT,
+            created_at INTEGER,
+            is_synced INTEGER DEFAULT 1
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS local_recipe_sale_items(
+            id TEXT PRIMARY KEY,
+            recipe_sale_id TEXT NOT NULL,
+            product_id TEXT NOT NULL,
+            quantity_sold REAL NOT NULL DEFAULT 0,
+            rate REAL NOT NULL DEFAULT 0,
+            amount REAL NOT NULL DEFAULT 0,
+            cost REAL NOT NULL DEFAULT 0,
+            profit REAL NOT NULL DEFAULT 0,
+            wastage_qty REAL NOT NULL DEFAULT 0
+          )
+        ''');
+
+        await db.execute('''
+          CREATE INDEX IF NOT EXISTS idx_local_recipe_sales_org_date
+          ON local_recipe_sales(organization_id, sale_date)
+        ''');
+        await db.execute('''
+          CREATE INDEX IF NOT EXISTS idx_local_recipe_sale_items_sale
+          ON local_recipe_sale_items(recipe_sale_id)
+        ''');
+
+        try {
+          await db.execute('ALTER TABLE local_products ADD COLUMN is_recipe INTEGER DEFAULT 0');
+        } catch (e) {
+          debugPrint('Database: v79 is_recipe column may already exist: $e');
+        }
+      } catch (e) {
+        debugPrint('Database: v79 migration error: $e');
+      }
+      debugPrint('Database: v79 migration complete.');
+    }
+    if (oldVersion < 80) {
+      debugPrint('Database: Starting v80 migration (add is_recipe column)...');
+      try {
+        await db.execute('ALTER TABLE local_products ADD COLUMN is_recipe INTEGER DEFAULT 0');
+      } catch (e) {
+        debugPrint('Database: v80 is_recipe column may already exist: $e');
+      }
+      debugPrint('Database: v80 migration complete.');
     }
   }
 
