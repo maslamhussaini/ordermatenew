@@ -135,6 +135,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
       json.remove('updated_at'); // Send updated_at if we control it
       json.remove('items_payload');
       json.remove('items');
+      json.remove('is_synced');
 
       // 1. Upsert Transfer Header
       await SupabaseConfig.client.from('omtbl_stock_transfers').upsert(json);
@@ -184,6 +185,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
       final json = model.toJson();
       json.remove('items_payload');
       json.remove('items');
+      json.remove('is_synced');
 
       // 1. Update Header
       await SupabaseConfig.client.from('omtbl_stock_transfers').upsert(json);

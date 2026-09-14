@@ -184,14 +184,14 @@ class _RecipeSaleScreenState extends ConsumerState<RecipeSaleScreen> {
                               Expanded(
                                 child: _InfoTile(
                                   label: 'Rate',
-                                  value: '\$${rate.toStringAsFixed(2)}',
+                                  value: rate.toStringAsFixed(2),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _InfoTile(
                                   label: 'Sales',
-                                  value: '\$${sales.toStringAsFixed(2)}',
+                                  value: sales.toStringAsFixed(2),
                                 ),
                               ),
                             ],

@@ -837,7 +837,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                                                 style: Theme.of(context).textTheme.bodySmall,
                                                               ),
                                                               Text(
-                                                                '\$${component?.cost.toStringAsFixed(2) ?? '0.00'}',
+                                                                 (component?.cost.toStringAsFixed(2) ?? '0.00'),
                                                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                                                       fontWeight: FontWeight.bold,
                                                                     ),
@@ -862,7 +862,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                                                 style: Theme.of(context).textTheme.bodySmall,
                                                               ),
                                                               Text(
-                                                                '\$${lineCost.toStringAsFixed(2)}',
+                                                                 lineCost.toStringAsFixed(2),
                                                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                                                       fontWeight: FontWeight.bold,
                                                                       color: Theme.of(context).primaryColor,
@@ -897,7 +897,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                               style: Theme.of(context).textTheme.bodyMedium,
                                             ),
                                             Text(
-                                              '\$${_recipeCost.toStringAsFixed(2)}',
+                                               _recipeCost.toStringAsFixed(2),
                                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                                     fontWeight: FontWeight.bold,
                                                     color: Theme.of(context).primaryColor,

@@ -129,7 +129,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         Text(
-                          '\$${_recipeCost.toStringAsFixed(2)}',
+                           _recipeCost.toStringAsFixed(2),
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 color: Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,
