@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+# Supabase local temp
+supabase/.temp/
+
 # Environment / secrets
 .env
 .env.local
